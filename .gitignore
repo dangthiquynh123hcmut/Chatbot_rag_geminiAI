@@ -1,0 +1,21 @@
+*/*.sqlite3
+**/*.pyc
+*/*.egg_info
+
+**/build
+
+# Python
+__pycache__/
+
+# Virtual Environment
+venv/
+**/env/.env*
+!**/env/.env.sample
+
+
+**.pdf
+
+
+.env
+
+**/.env

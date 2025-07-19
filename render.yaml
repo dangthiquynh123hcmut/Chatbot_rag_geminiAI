@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: rag-pdf-chatbot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn run_api:app --host=0.0.0.0 --port=$PORT
+    envVars:
+      - key: MONGODB_URI
+        description: MongoDB connection string
+        required: true
+      - key: DB_NAME
+        value: pdf_chatbot
+      - key: COLLECTION_NAME
+        value: pdf_files
+      - key: API_KEY
+        description: Google AI API key
+        required: true
+      - key: MODEL_NAME
+        value: Google AI
