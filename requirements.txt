@@ -1,18 +1,24 @@
-langchain
-faiss-cpu
-langchain-core
-langchain-google-genai
-PyPDF2
-google-ai-generativelanguage
-langchain-community
-
+# Core dependencies
 fastapi
 uvicorn
 python-multipart
 pydantic
 
+# Database
 pymongo
 python-dotenv
 
-sentence-transformers
+# PDF processing
+PyPDF2
+
+# AI and ML
 transformers
+sentence-transformers
+faiss-cpu
+
+# LangChain
+langchain
+langchain-core
+langchain-google-genai
+google-ai-generativelanguage
+langchain-community

@@ -17,7 +17,7 @@ cd rag-pdf-chatbot
 ```
 
 ### 2. Set Up Environment Variables
-Create a `.env` file with the following variables:
+Create a `.env` file in the project root with the following variables:
 ```
 MONGODB_URI=your_mongodb_connection_string
 DB_NAME=pdf_chatbot
@@ -32,15 +32,33 @@ MODEL_NAME=Google AI
 3. Click "New +" and select "Web Service"
 4. Connect your GitHub repository
 5. Configure the service:
-   - Name: `rag-pdf-chatbot` (or your preferred name)
-   - Region: Choose the one closest to your users
-   - Branch: `main` (or your preferred branch)
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn run_api:app --host=0.0.0.0 --port=$PORT`
+   - **Name**: `rag-pdf-chatbot` (or your preferred name)
+   - **Region**: Choose the one closest to your users
+   - **Branch**: `main` (or your preferred branch)
+   - **Build Command**: `chmod +x render-build.sh && ./render-build.sh`
+   - **Start Command**: `uvicorn run_api:app --host=0.0.0.0 --port=$PORT`
 6. Add environment variables from your `.env` file
-7. Click "Create Web Service"
+7. Under "Advanced", set:
+   - **Build Timeout**: 1800 seconds (30 minutes)
+8. Click "Create Web Service"
 
-### 4. Access Your Application
+### 4. Troubleshooting Deployment
+If your deployment fails or times out:
+1. **Check Logs**: Go to your service on Render and check the logs for specific errors
+2. **Common Issues**:
+   - **Timeout during build**: The free tier has limited resources. Try deploying during off-peak hours.
+   - **Missing dependencies**: Ensure all dependencies are in `requirements.txt`
+   - **Environment variables**: Double-check all required environment variables are set
+3. **Deploy Manually**:
+   ```bash
+   # Install dependencies
+   pip install -r requirements.txt
+   
+   # Run locally to test
+   uvicorn run_api:app --reload
+   ```
+
+### 5. Access Your Application
 Once deployed, you'll get a URL like `https://rag-pdf-chatbot.onrender.com`
 
 ## 📚 API Endpoints
@@ -50,27 +68,28 @@ Once deployed, you'll get a URL like `https://rag-pdf-chatbot.onrender.com`
 - `GET /conversations/{user_id}`: Get conversation history
 - `GET /files`: List uploaded PDF files
 - `DELETE /files/{file_id}`: Delete a PDF file
+- `GET /health`: Health check endpoint
 
 ## 🔧 Local Development
 
-1. Create and activate virtual environment:
-```bash
-python -m venv venv
-# On Windows:
-.\venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-```
+1. **Set Up Virtual Environment**:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+2. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-3. Run the development server:
-```bash
-uvicorn run_api:app --reload
-```
+3. **Run the Development Server**:
+   ```bash
+   uvicorn run_api:app --reload
+   ```
 
 The API will be available at `http://localhost:8000`
 
@@ -80,3 +99,11 @@ This application uses:
 - FAISS for vector similarity search
 - MongoDB for document storage
 - FastAPI for the web server
+
+## 📝 Notes
+- The first request after deployment may take longer as Render spins up the instance
+- Free tier has limitations on CPU and memory - consider upgrading for production use
+- All PDF processing happens in memory - large files may cause timeouts
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
