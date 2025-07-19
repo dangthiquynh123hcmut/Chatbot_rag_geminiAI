@@ -1,6 +1,8 @@
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
+import ssl
 from urllib.parse import quote_plus
 
 # Load environment variables
@@ -19,27 +21,37 @@ MODEL_NAME = os.getenv('MODEL_NAME', 'Google AI')
 if not MONGODB_URI:
     raise ValueError("MONGODB_URI is not set in .env file")
 
-# Split URI to handle username and password
-uri_parts = MONGODB_URI.split('@')
-if len(uri_parts) > 1:
-    auth_part = uri_parts[0]
-    if ':' in auth_part:
-        auth_parts = auth_part.split('//')[1].split(':')
-        username = auth_parts[0]
-        password = auth_parts[1]
-        # Escape username and password
-        username = quote_plus(username)
-        password = quote_plus(password)
-        # Rebuild URI with escaped credentials
-        MONGODB_URI = f"mongodb+srv://{username}:{password}@{uri_parts[1]}"
+# Add retryWrites and w=majority if not present in URI
+if 'retryWrites' not in MONGODB_URI and 'w=' not in MONGODB_URI:
+    MONGODB_URI += '&retryWrites=true&w=majority'
 
 # Initialize MongoDB client
 try:
-    client = MongoClient(MONGODB_URI)
+    # Create a new client and connect to the server
+    client = MongoClient(
+        MONGODB_URI,
+        serverSelectionTimeoutMS=5000,  # 5 second timeout
+        ssl=True,
+        ssl_cert_reqs=ssl.CERT_NONE,  # Disable certificate verification
+        server_api=ServerApi('1')
+    )
+    
+    # Test the connection
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+    
+    # Get database and collection
     db = client[DB_NAME]
     collection = db[COLLECTION_NAME]
-    # Test connection
-    client.server_info()
-    print("MongoDB connection successful")
+    
 except Exception as e:
-    raise ValueError(f"Failed to connect to MongoDB: {str(e)}")
+    error_msg = str(e)
+    if 'TLSV1_ALERT_INTERNAL_ERROR' in error_msg:
+        print("""
+        SSL Handshake Error Detected. Please check the following:
+        1. Make sure your MongoDB Atlas cluster has IP whitelist set to allow all IPs (0.0.0.0/0)
+        2. Ensure your MongoDB user has the correct permissions
+        3. Try updating your MongoDB driver: pip install --upgrade pymongo
+        4. If the issue persists, try using a newer version of Python
+        """)
+    raise ValueError(f"Failed to connect to MongoDB: {error_msg}")

@@ -5,8 +5,9 @@ python-multipart
 pydantic
 
 # Database
-pymongo
+pymongo>=4.3.3
 python-dotenv
+certifi>=2023.7.22
 
 # PDF processing
 PyPDF2
