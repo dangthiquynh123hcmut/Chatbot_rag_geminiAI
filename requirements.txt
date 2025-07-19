@@ -1,18 +1,18 @@
-langchain==0.1.0
-faiss-cpu==1.7.4
-langchain-core==0.1.0
-langchain-google-genai==0.0.5
-PyPDF2==3.0.1
-google-ai-generativelanguage==0.4.0
-langchain-community==0.0.14
+langchain
+faiss-cpu
+langchain-core
+langchain-google-genai
+PyPDF2
+google-ai-generativelanguage
+langchain-community
 
-fastapi==0.104.1
-uvicorn==0.24.0
-python-multipart==0.0.6
-pydantic==2.4.2
+fastapi
+uvicorn
+python-multipart
+pydantic
 
-pymongo==4.5.0
-python-dotenv==1.0.0
+pymongo
+python-dotenv
 
-sentence-transformers==2.2.2
-transformers==4.34.1
+sentence-transformers
+transformers
