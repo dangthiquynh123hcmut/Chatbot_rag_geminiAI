@@ -1,5 +1,7 @@
 from PyPDF2 import PdfReader
-
+from pdf2image import convert_from_bytes
+import pytesseract
+from io import BytesIO
 
 # Update imports for LangChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -11,17 +13,64 @@ from langchain.prompts import PromptTemplate
 
 from datetime import datetime
 
+def extract_text_with_ocr(pdf_bytes, filename):
+    """Extract text from scanned PDF using OCR"""
+    try:
+        # Convert PDF to list of images
+        images = convert_from_bytes(pdf_bytes)
+        text = ""
+        
+        # Process OCR for each page
+        for i, image in enumerate(images):
+            # Use Vietnamese and English language packs
+            page_text = pytesseract.image_to_string(image, lang='vie+eng')
+            if page_text.strip():
+                text += f"\n--- Trang {i+1} ---\n{page_text}\n"
+        
+        return text.strip()
+    except Exception as e:
+        print(f"Lỗi khi xử lý OCR cho file {filename}: {str(e)}")
+        return ""
+
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
         try:
-            pdf_reader = PdfReader(pdf)
-            for page in pdf_reader.pages:
-                text += page.extract_text()
+            # Read PDF content into memory
+            pdf_bytes = pdf.file.read()
+            
+            # First try to extract text directly
+            try:
+                pdf_reader = PdfReader(BytesIO(pdf_bytes))
+                page_texts = []
+                has_text = False
+                
+                for page in pdf_reader.pages:
+                    page_content = page.extract_text()
+                    if page_content and page_content.strip():
+                        page_texts.append(page_content)
+                        has_text = True
+                    else:
+                        # If a page has no text, it might be a scanned page
+                        break
+                
+                if has_text and len(page_texts) == len(pdf_reader.pages):
+                    # All pages have text, use direct extraction
+                    text += "\n\n".join(page_texts) + "\n\n"
+                else:
+                    # Some or all pages are scanned, use OCR
+                    print(f"Phát hiện file scan, đang sử dụng OCR cho: {pdf.filename}")
+                    text += extract_text_with_ocr(pdf_bytes, pdf.filename) + "\n\n"
+                    
+            except Exception as e:
+                print(f"Lỗi khi đọc file {pdf.filename} bằng PyPDF2, đang thử dùng OCR: {str(e)}")
+                text += extract_text_with_ocr(pdf_bytes, pdf.filename) + "\n\n"
+                
         except Exception as e:
-            print(f"Lỗi khi đọc file {pdf}: {str(e)}")
+            print(f"Lỗi khi xử lý file {pdf.filename}: {str(e)}")
             continue
-    return text
+            
+    return text.strip()
 
 def get_text_chunks(text, model_name):
     if model_name == "Google AI":
